@@ -1,0 +1,5 @@
+# ignore the .idea stuff
+.idea/
+
+# and virtual environment stuff
+venv/

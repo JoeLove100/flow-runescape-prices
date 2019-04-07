@@ -3,11 +3,24 @@ import pandas as pd
 from datetime import datetime
 from bs4 import BeautifulSoup
 
-DATE = "date"
-PRICE = "price"
-VOLUME = "volume"
-ATTRIBUTE = "attribute"
-VALUE = "value"
+
+class SeriesConstants:
+
+    DATE = "date"
+    PRICE = "price"
+    VOLUME = "volume"
+
+    ATTRIBUTE = "attribute"
+    VALUE = "value"
+
+    @classmethod
+    def get_raw_columns(cls):
+
+        raw_columns = [cls.DATE,
+                       cls.PRICE,
+                       cls.VOLUME]
+        return raw_columns
+
 
 def _get_web_page_html(page_url):
     """
@@ -63,7 +76,7 @@ def _parse_timestamps_to_date(date_col):
     return date_col
 
 
-def format_raw_data_as_time_series(raw_data):
+def _format_raw_data_as_time_series(raw_data):
     """
     reforat the raw chart data from the rune
     wiki as a pandas Series object
@@ -71,20 +84,23 @@ def format_raw_data_as_time_series(raw_data):
 
     basic_series = pd.Series(raw_data.split("|"))
     data_series = basic_series.str.split(":", expand=True)
-    data_series.columns = [DATE, PRICE, VOLUME]
-    data_series[DATE] = _parse_timestamps_to_date(data_series[DATE])
+    data_series.columns = SeriesConstants.get_raw_columns()
+    data_series[SeriesConstants.DATE] = \
+        _parse_timestamps_to_date(data_series[SeriesConstants.DATE])
 
     return data_series
 
 
-def format_time_series(asset_time_series):
+def _format_time_series(asset_time_series):
     """
     format the time series
     """
 
-    formatted_time_series = pd.melt(asset_time_series, id_vars=DATE,
-                                    var_name=ATTRIBUTE, value_name=VALUE)
-    formatted_time_series.set_index([DATE, ATTRIBUTE], inplace=True)
+    formatted_time_series = pd.melt(asset_time_series, id_vars=SeriesConstants.DATE,
+                                    var_name=SeriesConstants.ATTRIBUTE,
+                                    value_name=SeriesConstants.VALUE)
+    formatted_time_series.set_index([SeriesConstants.DATE, SeriesConstants.ATTRIBUTE],
+                                    inplace=True)
     return formatted_time_series
 
 
@@ -102,8 +118,8 @@ def get_data_for_asset(asset_name):
 
     # extract and format the price and volume data
     raw_data = _extract_asset_chart_data(parsed_html, "iron ore")
-    asset_time_series = format_raw_data_as_time_series(raw_data)
-    formatted_time_series = format_time_series(asset_time_series)
+    asset_time_series = _format_raw_data_as_time_series(raw_data)
+    formatted_time_series = _format_time_series(asset_time_series)
 
     return formatted_time_series
 

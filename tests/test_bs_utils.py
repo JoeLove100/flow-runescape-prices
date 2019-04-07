@@ -1,6 +1,6 @@
 import unittest
 from unittest import mock
-from bs_utils import _get_web_page_html
+from asset_data_getter import _get_web_page_html
 
 
 class TestBSUtils(unittest.TestCase):

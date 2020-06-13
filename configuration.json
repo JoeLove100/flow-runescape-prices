@@ -1,0 +1,11 @@
+{
+  "base_url_indices": "https://runescape.wiki/w/RuneScape:Grand_Exchange_Market_Watch/",
+  "base_url_assets": "https://runescape.fandom.com/wiki/",
+  "indices": ["Common_Trade_Index",
+              "Discontinued_Rare_Index",
+              "Rune_Index",
+              "Log_Index",
+              "Food_Index",
+              "Metal_Index",
+              "Herb_Index"]
+}

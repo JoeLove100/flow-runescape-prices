@@ -48,7 +48,7 @@ def _get_parsed_html(raw_html: str) -> BeautifulSoup:
 
 def _extract_asset_chart_data(parsed_html: BeautifulSoup,
                               parent_asset_name: str,
-                              sub_assets: List[str]) -> Dict[str, str]:
+                              all_sub_assets: List[str]) -> Dict[str, str]:
     """
     extract the asset price chart from the rune wiki
     page
@@ -61,9 +61,8 @@ def _extract_asset_chart_data(parsed_html: BeautifulSoup,
         raise ValueError(msg)
     else:
         data_by_sub_asset = dict()
-        for i in range(len(charts_on_page)):
-            sub_asset_for_chart = sub_assets[i]
-            data_by_sub_asset.update({sub_asset_for_chart: charts_on_page[i].get("data-data")})
+        for i, sub_asset in enumerate(all_sub_assets):
+            data_by_sub_asset.update({sub_asset: charts_on_page[i].get("data-data")})
 
         return data_by_sub_asset
 

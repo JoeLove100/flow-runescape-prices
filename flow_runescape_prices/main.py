@@ -24,7 +24,7 @@ def get_data():
         config = json.load(config_json)
 
     logger.info("Start downloading asset names for selected indices")
-    assets_to_download = get_asset_names_for_indices(config[Config.INDICES])
+    assets_to_download = get_asset_names_for_indices(config[Config.INDICES], config[Config.BASE_URL_INDICES])
     logger.info("Downloaded selected asset names")
 
     logger.info("Start downloading data for selected asset names")

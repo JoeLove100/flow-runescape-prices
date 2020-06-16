@@ -3,3 +3,6 @@
 
 # and virtual environment stuff
 venv/
+
+# all pycache files
+*/__pycache__/*

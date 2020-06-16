@@ -1,6 +1,9 @@
 import requests
 from typing import List
 from bs4 import BeautifulSoup
+from logging import getLogger
+
+logger = getLogger()
 
 
 def _get_web_page_html(page_url: str) -> str:
@@ -87,6 +90,7 @@ def get_asset_names_for_indices(indices: List[str],
 
     for index in indices:
 
+        logger.info(f"Getting asset names for index {index}")
         assets_in_index = _get_asset_names_for_index(index, base_url)
         all_assets.extend(assets_in_index)
 

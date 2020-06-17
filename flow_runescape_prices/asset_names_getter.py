@@ -1,7 +1,9 @@
 import requests
+import pandas as pd
 from typing import List
 from bs4 import BeautifulSoup
 from logging import getLogger
+from constants import RunescapeTimeSeries
 
 logger = getLogger()
 
@@ -71,7 +73,7 @@ def _get_asset_names_for_index(index_name: str,
     return asset_names
 
 
-def _clean_name(index_name):
+def _clean_name(index_name: str) -> str:
 
     index_name = index_name.replace("%27", "")  # seems to be an issue in Halloween items
     index_name = index_name.split("(")[0]
@@ -79,8 +81,17 @@ def _clean_name(index_name):
     return index_name
 
 
+def _add_display_name(all_assets: pd.DataFrame) -> pd.DataFrame:
+
+    def _to_display(name: str) -> str:
+        return name.replace("_", " ").title()
+
+    all_assets[RunescapeTimeSeries.DISPLAY_NAME] = all_assets[RunescapeTimeSeries.PARENT_ASSET_NAME].apply(_to_display)
+    return all_assets
+
+
 def get_asset_names_for_indices(indices: List[str],
-                                base_url: str) -> List[str]:
+                                base_url: str) -> pd.DataFrame:
     """
     get a list of distinct assets which
     appear in the selected indices
@@ -92,10 +103,10 @@ def get_asset_names_for_indices(indices: List[str],
 
         logger.info(f"Getting asset names for index {index}")
         assets_in_index = _get_asset_names_for_index(index, base_url)
-        all_assets.extend(assets_in_index)
+        all_assets.extend([_clean_name(asset), index] for asset in assets_in_index)
 
-    all_assets = list(set(all_assets))
-    all_assets = [_clean_name(s) for s in all_assets]
-
+    all_assets = pd.DataFrame(all_assets, columns=[RunescapeTimeSeries.PARENT_ASSET_NAME,
+                                                   RunescapeTimeSeries.INDEX])
+    all_assets = _add_display_name(all_assets)
     return all_assets
 

@@ -6,3 +6,6 @@ venv/
 
 # all pycache files
 */__pycache__/*
+
+# credentials
+credentials.json

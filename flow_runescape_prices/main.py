@@ -1,11 +1,33 @@
 import json
 import logging
-from typing import Any, Dict
-
+import pyodbc
+import argparse
+import pandas as pd
+from datetime import datetime
+from typing import Any, Dict, Tuple
 from constants import Config
-from flow_runescape_prices.asset_names_getter import get_asset_names_for_indices
-from flow_runescape_prices.asset_data_getter import get_all_asset_data
-from flow_runescape_prices.data_upsert import upsert_index_data
+from asset_names_getter import get_asset_names_for_indices
+from asset_data_getter import get_historic_market_data
+from data_io import get_asset_data, get_index_data, upsert_asset_data, upsert_historic_data
+
+
+def parse_cli_args() -> Tuple[bool, datetime]:
+
+    parser = argparse.ArgumentParser(description="Upload Runescape asset pricing data to database")
+    parser.add_argument("--refresh-assets",  dest="refresh_assets", action="store_true",
+                        help="Download list of assets from the Runescape wiki")
+    parser.add_argument("--start-date", help="Cutoff data of the form YYYY-MM-DD")
+
+    args = parser.parse_args()
+    refresh_assets = args.refresh_assets
+    start_date = args.start_date
+
+    if start_date:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    else:
+        start_date = datetime.now().date() + pd.offsets.MonthEnd(-1)
+
+    return refresh_assets, start_date
 
 
 def get_logger() -> logging.Logger:
@@ -31,23 +53,49 @@ def load_config() -> Dict[str, Any]:
     return main_config
 
 
+def get_cursor(config: Dict[str, Any]) -> Tuple[pyodbc.Cursor, pyodbc.Connection]:
+    """
+    connect to database
+    """
+
+    db_name = config[Config.DB_NAME]
+    db_username = config[Config.DB_USERNAME]
+    db_password = config[Config.DB_PASSWORD]
+
+    conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};'
+                          f'SERVER={db_name}'
+                          'DATABASE=Runescape;'
+                          f'UID={db_username};'
+                          f'PWD={db_password}')
+
+    cursor = conn.cursor()
+
+    return cursor, conn
+
+
 def get_data():
 
     logger = get_logger()
     config = load_config()
+    cursor, conn = get_cursor(config)
+    refresh_assets, start_date = parse_cli_args()
 
-    logger.info("Start downloading asset names for selected indices")
-    assets_to_download = get_asset_names_for_indices(config[Config.INDICES], config[Config.BASE_URL_INDICES])
-    logger.info("Downloaded selected asset names")
-    logger.info("Begin uploading asset data to database")
-    upsert_index_data(assets_to_download, config[Config.DB_NAME], config[Config.DB_USERNAME],
-                      config[Config.DB_PASSWORD])
-    logger.info("Asset data uploaded to database")
+    if refresh_assets:
+        logger.info("Start downloading asset names for selected indices")
+        selected_indices = get_index_data(cursor)
+        assets_to_download = get_asset_names_for_indices(selected_indices, config[Config.BASE_URL_INDICES])
+        logger.info("Downloaded selected asset names")
+        logger.info("Begin uploading asset data to database")
+        upsert_asset_data(assets_to_download, cursor, conn)
+        logger.info("Asset data uploaded to database")
 
-
-    # logger.info("Start downloading data for selected asset names")
-    # all_data = get_all_asset_data(assets_to_download, config[Config.BASE_URL_ASSET])
-    # logger.info("Downloaded price/volume data for selected asset names")
+    all_assets = get_asset_data(cursor)
+    logger.info("Start downloading data for selected asset names")
+    historic_data = get_historic_market_data(all_assets, config[Config.BASE_URL_ASSET], start_date)
+    logger.info("Downloaded price/volume data for selected asset names")
+    logger.info("Begin uploading historic data to database")
+    upsert_historic_data(historic_data, cursor, conn)
+    logger.info("Historic data uploaded to database")
 
 
 if __name__ == "__main__":

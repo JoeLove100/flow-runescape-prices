@@ -1,3 +1,4 @@
+import os
 import requests
 import pandas as pd
 from logging import getLogger
@@ -47,8 +48,7 @@ def _get_parsed_html(raw_html: str) -> BeautifulSoup:
 
 
 def _extract_asset_chart_data(parsed_html: BeautifulSoup,
-                              parent_asset_name: str,
-                              all_sub_assets: List[str]) -> Dict[str, str]:
+                              asset_name: str) -> str:
     """
     extract the asset price chart from the rune wiki
     page
@@ -56,15 +56,12 @@ def _extract_asset_chart_data(parsed_html: BeautifulSoup,
 
     charts_on_page = parsed_html.findAll("div", {"class": "GEdataprices"})
     if not charts_on_page:
-        msg = f"No price series chart found on rune wiki page for {parent_asset_name}"
+        msg = f"No price series chart found on rune wiki page for {asset_name}"
         logger.error(msg)
         raise ValueError(msg)
     else:
-        data_by_sub_asset = dict()
-        for i, sub_asset in enumerate(all_sub_assets):
-            data_by_sub_asset.update({sub_asset: charts_on_page[i].get("data-data")})
-
-        return data_by_sub_asset
+        data_for_asset = charts_on_page[0].get("data-data")
+        return data_for_asset
 
 
 def _parse_timestamps_to_date(date_col: pd.Series) -> pd.Series:
@@ -98,25 +95,21 @@ def _format_raw_data_as_time_series(raw_data: str) -> pd.Series:
     return data_series
 
 
-def _get_time_series_by_sub_asset(raw_data_by_sub_asset: Dict[str, str]) -> Dict[str, pd.Series]:
+def _get_time_series_by_for_asset(raw_data_for_asset: str,
+                                  asset_name: str) -> pd.Series:
     """
     convert the raw chart data for each sub-asset
     into a pandas DataFrame
     """
 
-    time_series_by_sub_asset = dict()
-    for sub_asset in list(raw_data_by_sub_asset):
-        logger.info(f"processing data for sub-asset {sub_asset}")
-        raw_data = raw_data_by_sub_asset[sub_asset]
-        time_series = _format_raw_data_as_time_series(raw_data)
-        time_series_by_sub_asset.update({sub_asset: time_series})
-
-    return time_series_by_sub_asset
+    logger.info(f"processing data for sub-asset {asset_name}")
+    raw_data = raw_data_for_asset
+    time_series = _format_raw_data_as_time_series(raw_data)
+    return time_series
 
 
 def _format_single_time_series(asset_time_series: pd.Series,
-                               parent_asset_name: str,
-                               sub_asset_name: str) -> pd.Series:
+                               parent_asset_name: str) -> pd.DataFrame:
     """
     format the time series
     """
@@ -124,27 +117,10 @@ def _format_single_time_series(asset_time_series: pd.Series,
     formatted_time_series = pd.melt(asset_time_series, id_vars=RunescapeTimeSeries.DATE,
                                     var_name=RunescapeTimeSeries.ATTRIBUTE,
                                     value_name=RunescapeTimeSeries.VALUE)
-    formatted_time_series.set_index(RunescapeTimeSeries.DATE, inplace=True)
     formatted_time_series[RunescapeTimeSeries.PARENT_ASSET_NAME] = parent_asset_name
-    formatted_time_series[RunescapeTimeSeries.SUB_ASSET_NAME] = sub_asset_name
-
+    formatted_time_series[RunescapeTimeSeries.DATE] = pd.to_datetime(formatted_time_series[RunescapeTimeSeries.DATE])
     formatted_time_series.dropna(subset=[RunescapeTimeSeries.VALUE], inplace=True, axis=0)
     return formatted_time_series
-
-
-def _get_formatted_time_series(all_asset_time_series: Dict[str, pd.Series],
-                               parent_asset_name: str) -> pd.DataFrame:
-    """
-    enforce consistency across time series
-    """
-
-    all_time_series = []
-
-    for asset_name, raw_time_series in all_asset_time_series.items():
-        formatted_time_series = _format_single_time_series(raw_time_series, parent_asset_name, asset_name)
-        all_time_series.append(formatted_time_series)
-
-    return pd.concat(all_time_series)
 
 
 def _extract_sub_assets(parsed_html: BeautifulSoup,
@@ -166,31 +142,31 @@ def _extract_sub_assets(parsed_html: BeautifulSoup,
         return sub_assets
 
 
-def get_data_for_asset(parent_asset_name: str,
+def get_data_for_asset(asset_name: str,
                        base_url: str) -> pd.DataFrame:
     """
     download, parse and format the price and volume
     data for a given asset from the rune wiki
     """
 
-    logger.info(f"getting data for parent asset {parent_asset_name}")
+    logger.info(f"getting data for parent asset {asset_name}")
 
-    url = base_url + parent_asset_name
+    url = base_url + asset_name
     raw_html = _get_web_page_html(url)
     parsed_html = _get_parsed_html(raw_html)
 
-    sub_assets = _extract_sub_assets(parsed_html, parent_asset_name)
-    raw_data_by_sub_asset = _extract_asset_chart_data(parsed_html, parent_asset_name, sub_assets)
-    asset_time_series = _get_time_series_by_sub_asset(raw_data_by_sub_asset)
-    formatted_time_series = _get_formatted_time_series(asset_time_series, parent_asset_name)
+    raw_data_for_asset = _extract_asset_chart_data(parsed_html, asset_name)
+    asset_time_series = _get_time_series_by_for_asset(raw_data_for_asset, asset_name)
+    formatted_time_series = _format_single_time_series(asset_time_series, asset_name)
 
-    logger.info(f"downloaded data for parent asset {parent_asset_name}")
+    logger.info(f"downloaded data for parent asset {asset_name}")
 
     return formatted_time_series
 
 
-def get_all_asset_data(asset_list: List[str],
-                       base_url: str) -> pd.DataFrame:
+def get_historic_market_data(ids_by_asset: Dict[str, int],
+                             base_url: str,
+                             start_date: datetime) -> pd.DataFrame:
     """
     get price and volume data for assets in the
     asset list, and return this in a pandas
@@ -199,11 +175,11 @@ def get_all_asset_data(asset_list: List[str],
 
     all_data = []
 
-    for asset in asset_list:
-        data_for_asset = get_data_for_asset(asset,
-                                            base_url)
+    for asset_name, asset_id in ids_by_asset.items():
+        data_for_asset = get_data_for_asset(asset_name, base_url)
+        data_for_asset[RunescapeTimeSeries.ASSET_ID] = asset_id
+        data_for_asset = data_for_asset[data_for_asset[RunescapeTimeSeries.DATE] >= start_date]
         all_data.append(data_for_asset)
 
     data_to_return = pd.concat(all_data)
-
     return data_to_return

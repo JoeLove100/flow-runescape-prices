@@ -1,6 +1,6 @@
 import requests
 import pandas as pd
-from typing import List
+from typing import List, Dict
 from bs4 import BeautifulSoup
 from logging import getLogger
 from constants import RunescapeTimeSeries
@@ -90,7 +90,7 @@ def _add_display_name(all_assets: pd.DataFrame) -> pd.DataFrame:
     return all_assets
 
 
-def get_asset_names_for_indices(indices: List[str],
+def get_asset_names_for_indices(indices: Dict[str, int],
                                 base_url: str) -> pd.DataFrame:
     """
     get a list of distinct assets which
@@ -99,11 +99,11 @@ def get_asset_names_for_indices(indices: List[str],
 
     all_assets = []
 
-    for index in indices:
+    for index_name, index_id in indices.items():
 
-        logger.info(f"Getting asset names for index {index}")
-        assets_in_index = _get_asset_names_for_index(index, base_url)
-        all_assets.extend([_clean_name(asset), index] for asset in assets_in_index)
+        logger.info(f"Getting asset names for index {index_name}")
+        assets_in_index = _get_asset_names_for_index(index_name, base_url)
+        all_assets.extend([_clean_name(asset), index_id] for asset in assets_in_index)
 
     all_assets = pd.DataFrame(all_assets, columns=[RunescapeTimeSeries.PARENT_ASSET_NAME,
                                                    RunescapeTimeSeries.INDEX])

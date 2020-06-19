@@ -1,0 +1,1 @@
+select AssetId, AssetName from Runescape.dbo.assets

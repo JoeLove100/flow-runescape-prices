@@ -6,7 +6,6 @@ BEGIN
 CREATE TABLE assets(
     AssetId int NOT NULL IDENTITY(1, 1) PRIMARY KEY,
     AssetName varchar(255) NOT NULL,
-    AssetIndex varchar(255) NOT NULL,
     AssetDisplayName varchar(255) NOT NULL
 )
 END

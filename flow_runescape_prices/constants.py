@@ -9,6 +9,7 @@ class RunescapeTimeSeries:
     PARENT_ASSET_NAME = "parent_asset_name"
     SUB_ASSET_NAME = "sub_asset_name"
     DISPLAY_NAME = "display_name"
+    ASSET_ID = "asset_id"
     INDEX = "index"
 
     @classmethod

@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 from unittest import mock
 from datetime import date, datetime
-from constants import RunescapeTimeSeries
+from flow_runescape_prices.constants import RunescapeTimeSeries
 from flow_runescape_prices.asset_data_getter import _strip_special_characters, _extract_asset_chart_data, \
     _parse_timestamps_to_date, _format_raw_data_as_time_series, _format_single_time_series, \
     _extract_sub_assets

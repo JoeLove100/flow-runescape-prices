@@ -1,7 +1,7 @@
 import unittest
 import pandas as pd
 from unittest import mock
-from constants import RunescapeTimeSeries
+from flow_runescape_prices.constants import RunescapeTimeSeries
 from flow_runescape_prices.asset_names_getter import _is_asset_table_row, _clean_name, _add_display_name
 
 

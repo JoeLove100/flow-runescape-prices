@@ -109,4 +109,3 @@ def get_asset_names_for_indices(indices: Dict[str, int],
                                                    RunescapeTimeSeries.INDEX])
     all_assets = _add_display_name(all_assets)
     return all_assets
-

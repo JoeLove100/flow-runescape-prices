@@ -1,4 +1,3 @@
-import os
 import requests
 import pandas as pd
 from logging import getLogger
@@ -76,7 +75,7 @@ def _parse_timestamps_to_date(date_col: pd.Series) -> pd.Series:
     return date_col
 
 
-def _format_raw_data_as_time_series(raw_data: str) -> pd.Series:
+def _format_raw_data_as_time_series(raw_data: str) -> pd.DataFrame:
     """
     reformat the raw chart data from the rune
     wiki as a pandas Series object
@@ -96,7 +95,7 @@ def _format_raw_data_as_time_series(raw_data: str) -> pd.Series:
 
 
 def _get_time_series_by_for_asset(raw_data_for_asset: str,
-                                  asset_name: str) -> pd.Series:
+                                  asset_name: str) -> pd.DataFrame:
     """
     convert the raw chart data for each sub-asset
     into a pandas DataFrame
@@ -108,7 +107,7 @@ def _get_time_series_by_for_asset(raw_data_for_asset: str,
     return time_series
 
 
-def _format_single_time_series(asset_time_series: pd.Series,
+def _format_single_time_series(asset_time_series: pd.DataFrame,
                                parent_asset_name: str) -> pd.DataFrame:
     """
     format the time series

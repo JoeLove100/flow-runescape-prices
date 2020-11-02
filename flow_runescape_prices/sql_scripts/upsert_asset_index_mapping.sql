@@ -8,6 +8,6 @@ USING (
     on assets.AssetName = tmp.AssetName
     ) as Source
 on Target.IndexId = Source.IndexId
-and Target.AssetId = Source.IndexId
+and Target.AssetId = Source.AssetId
 when not matched then
     insert (IndexId, AssetId) values (Source.IndexId, Source.AssetId);

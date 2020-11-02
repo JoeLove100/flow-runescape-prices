@@ -59,8 +59,6 @@ def upsert_historic_data(historic_data: pd.DataFrame,
                                     cursor=cursor, conn=conn)
     historic_data.groupby([RunescapeTimeSeries.ASSET_ID]).apply(upsert_func)
 
-    _upsert_data(historic_data, "upsert_historic_data.sql", cursor, conn)
-
 
 def get_index_data(cursor: pyodbc.Cursor) -> Dict[str, int]:
     """

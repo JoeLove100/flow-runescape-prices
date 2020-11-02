@@ -7,5 +7,8 @@ venv/
 # all pycache files
 */__pycache__/*
 
+# batch files
+*.bat
+
 # credentials
 credentials.json

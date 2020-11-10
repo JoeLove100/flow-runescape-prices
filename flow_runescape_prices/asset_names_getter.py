@@ -3,7 +3,7 @@ import pandas as pd
 from typing import List, Dict
 from bs4 import BeautifulSoup
 from logging import getLogger
-from flow_runescape_prices.constants import RunescapeTimeSeries
+from constants import RunescapeTimeSeries
 
 logger = getLogger()
 

@@ -4,7 +4,7 @@ from logging import getLogger
 from datetime import datetime
 from bs4 import BeautifulSoup
 from typing import Dict, List
-from flow_runescape_prices.constants import RunescapeTimeSeries
+from constants import RunescapeTimeSeries
 
 logger = getLogger()
 

@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 import pyodbc
@@ -43,10 +44,11 @@ def get_logger() -> logging.Logger:
 
 def load_config() -> Dict[str, Any]:
 
-    with open("../configuration.json") as config_json:
+    parent_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    with open(os.path.join(parent_dir, "configuration.json")) as config_json:
         main_config = json.load(config_json)
 
-    with open("../credentials.json") as credentials_json:
+    with open(os.path.join(parent_dir, "credentials.json")) as credentials_json:
         credential = json.load(credentials_json)
 
     main_config.update(credential)

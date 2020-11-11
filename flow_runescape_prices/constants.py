@@ -25,6 +25,7 @@ class Config:
 
     BASE_URL_INDICES = "base_url_indices"
     BASE_URL_ASSET = "base_url_assets"
+    LOG_FILE_DIRECTORY = "log_file_directory"
     INDICES = "indices"
     DB_NAME = "db_name"
     DB_USERNAME = "db_username"

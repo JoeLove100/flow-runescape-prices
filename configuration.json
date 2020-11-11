@@ -1,6 +1,7 @@
 {
   "base_url_indices": "https://runescape.wiki/w/RuneScape:Grand_Exchange_Market_Watch/",
   "base_url_assets": "https://runescape.wiki/w/",
+  "log_file_directory": "C:/Users/joelo/Runescape/",
   "indices": ["Common_Trade_Index",
               "Discontinued_Rare_Index",
               "Rune_Index",

@@ -31,13 +31,17 @@ def parse_cli_args() -> Tuple[bool, datetime]:
     return refresh_assets, start_date
 
 
-def get_logger() -> logging.Logger:
+def get_logger(config: Dict[str, Any]) -> logging.Logger:
 
     logger = logging.getLogger()
     logger.setLevel("INFO")
 
     stream_handler = logging.StreamHandler()
     logger.addHandler(stream_handler)
+
+    log_file = f"{config[Config.LOG_FILE_DIRECTORY]}{datetime.now()}.txt"
+    file_handler = logging.FileHandler(log_file)
+    logger.addHandler(file_handler)
 
     return logger
 

@@ -82,9 +82,16 @@ def get_data():
     cursor, conn = get_cursor(config)
     refresh_assets, start_date = parse_cli_args()
 
+    logger.info("Downloading index-level data")
+    selected_indices = get_index_data(cursor)
+    index_data = get_historic_market_data(selected_indices, config[Config.BASE_URL_INDICES], start_date)
+    logger.info("Downloaded index-level data")
+    logger.info("Begin uploading historic index data to database")
+    upsert_historic_data(index_data, cursor, conn, "upsert_index_historic_data.sql")
+    logger.info("Historic index data uploaded to database")
+
     if refresh_assets:
         logger.info("Start downloading asset names for selected indices")
-        selected_indices = get_index_data(cursor)
         assets_to_download = get_asset_names_for_indices(selected_indices, config[Config.BASE_URL_INDICES])
         logger.info("Downloaded selected asset names")
         logger.info("Begin uploading asset data to database")
@@ -92,12 +99,14 @@ def get_data():
         logger.info("Asset data uploaded to database")
 
     all_assets = get_asset_data(cursor)
+    logger.info("Get index data")
+    logger.info("Downloaded index data")
     logger.info("Start downloading data for selected asset names")
     historic_data = get_historic_market_data(all_assets, config[Config.BASE_URL_ASSET], start_date)
     logger.info("Downloaded price/volume data for selected asset names")
-    logger.info("Begin uploading historic data to database")
-    upsert_historic_data(historic_data, cursor, conn)
-    logger.info("Historic data uploaded to database")
+    logger.info("Begin uploading historic asset data to database")
+    upsert_historic_data(historic_data, cursor, conn, "upsert_historic_data.sql")
+    logger.info("Historic asset data uploaded to database")
 
 
 if __name__ == "__main__":

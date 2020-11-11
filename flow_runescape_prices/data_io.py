@@ -46,7 +46,8 @@ def upsert_asset_data(asset_data: pd.DataFrame,
 
 def upsert_historic_data(historic_data: pd.DataFrame,
                          cursor: pyodbc.Cursor,
-                         conn: pyodbc.Connection):
+                         conn: pyodbc.Connection,
+                         query_file: str):
     """
     update data and upsert to ensure any revisions
     are captured
@@ -54,9 +55,10 @@ def upsert_historic_data(historic_data: pd.DataFrame,
 
     historic_data = historic_data.loc[:, [RunescapeTimeSeries.DATE, RunescapeTimeSeries.ASSET_ID,
                                           RunescapeTimeSeries.ATTRIBUTE, RunescapeTimeSeries.VALUE]]
+    historic_data = historic_data.drop_duplicates(subset=[RunescapeTimeSeries.DATE, RunescapeTimeSeries.ASSET_ID,
+                                                          RunescapeTimeSeries.ATTRIBUTE], keep="last")
     historic_data[RunescapeTimeSeries.DATE] = historic_data[RunescapeTimeSeries.DATE].dt.strftime("%Y-%m-%d")
-    upsert_func = functools.partial(_upsert_data, query_file="upsert_historic_data.sql",
-                                    cursor=cursor, conn=conn)
+    upsert_func = functools.partial(_upsert_data, query_file=query_file, cursor=cursor, conn=conn)
     historic_data.groupby([RunescapeTimeSeries.ASSET_ID]).apply(upsert_func)
 
 

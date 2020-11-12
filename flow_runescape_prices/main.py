@@ -39,7 +39,7 @@ def get_logger(config: Dict[str, Any]) -> logging.Logger:
     stream_handler = logging.StreamHandler()
     logger.addHandler(stream_handler)
 
-    log_file = f"{config[Config.LOG_FILE_DIRECTORY]}{datetime.now()}.txt"
+    log_file = f"{config[Config.LOG_FILE_DIRECTORY]}{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     file_handler = logging.FileHandler(log_file)
     logger.addHandler(file_handler)
 
@@ -81,8 +81,8 @@ def get_cursor(config: Dict[str, Any]) -> Tuple[pyodbc.Cursor, pyodbc.Connection
 
 def get_data():
 
-    logger = get_logger()
     config = load_config()
+    logger = get_logger(config)
     cursor, conn = get_cursor(config)
     refresh_assets, start_date = parse_cli_args()
 
